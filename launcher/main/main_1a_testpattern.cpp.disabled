@@ -1,0 +1,70 @@
+// RetroESP32_SVIDEO - Stage 1a: composite / S-Video signal test pattern
+//
+// Goal: prove the hardware + build before any emulator exists.
+//   - video  : 8-bit DAC on GPIO25 (DAC_CHANNEL_1, fixed in silicon)
+//   - audio  : LEDC PWM carrier on GPIO26 (silent here)
+//   - exercises the REAL ISR / blit / sync / burst / APLL pipeline in video_out.h
+//
+// If you see 8 vertical grey bars (black -> white) standing still on the TV via the
+// S-Video luma line, the signal chain, APLL clock and -Ofast build are all good.
+
+#include <stdio.h>
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+// machine "flavors" that video_out.h's blit() switches on (normally come from emu.h)
+#define EMU_ATARI 1
+#define EMU_NES   2
+#define EMU_SMS   3
+
+#include "video_out.h"   // the ported driver (audio path -> IDF LEDC)
+
+// ----------------------------------------------------------------------------------
+// Synthetic framebuffer: one scanline of palette indices, reused for all 240 lines.
+// We drive the genuine NES blit path (4 samples/color-clock), so the test pattern
+// goes through exactly the same code an emulator frame would.
+// ----------------------------------------------------------------------------------
+#define LINE_PIXELS 256
+static uint8_t  s_line[LINE_PIXELS];   // palette indices for one active scanline
+static uint8_t* s_lines[240];          // 240 active lines, all -> s_line
+static uint32_t s_palette[256];        // NES blit masks the index with 0x3F
+
+// A "gray" palette entry: all four NTSC sub-samples equal the same DAC byte, so there
+// is no chroma component -> pure luma (a grey level). g8 is the 8-bit DAC value.
+static inline uint32_t gray_entry(uint8_t g8)
+{
+    return (uint32_t)g8 * 0x01010101u;
+}
+
+extern "C" void app_main(void)
+{
+    printf("\n=== RetroESP32_SVIDEO : stage-1a test pattern ===\n");
+
+    // 8 vertical bars across the 256-pixel line (indices 0..7)
+    for (int x = 0; x < LINE_PIXELS; x++)
+        s_line[x] = (uint8_t)(x >> 5);
+
+    // bar index -> increasing luma, black (7.5 IRE) up to white (100 IRE)
+    static const float ire_levels[8] = { 7.5f, 20.f, 35.f, 50.f, 65.f, 80.f, 92.f, 100.f };
+    for (int i = 0; i < 8; i++)
+        s_palette[i] = gray_entry((uint8_t)(IRE(ire_levels[i]) >> 8));
+    for (int i = 8; i < 256; i++)
+        s_palette[i] = gray_entry((uint8_t)(BLANKING_LEVEL >> 8));
+
+    for (int y = 0; y < 240; y++)
+        s_lines[y] = s_line;
+
+    // Hand the framebuffer to the driver BEFORE starting the A/V pump (the ISR
+    // early-outs while _lines is null).
+    _lines = s_lines;
+
+    // Start the real pipeline: 4 samples per color clock, NES geometry, NTSC.
+    video_init(4 /*cc_width*/, EMU_NES /*machine*/, s_palette, 1 /*ntsc*/);
+
+    printf("video pump started: expect 8 grey bars over S-Video (DAC GPIO25)\n");
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        printf("running... frame=%d line=%d\n", _frame_counter, _line_counter);
+    }
+}

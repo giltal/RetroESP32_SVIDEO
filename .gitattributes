@@ -1,0 +1,5 @@
+# Normalize line endings in the repo (stored as LF).
+* text=auto
+
+# Keep shell scripts LF on checkout so they run under bash/Git-Bash after clone.
+*.sh text eol=lf

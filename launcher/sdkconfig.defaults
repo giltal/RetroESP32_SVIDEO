@@ -1,0 +1,40 @@
+# Defaults applied on first `make defconfig`. Delete sdkconfig to regenerate.
+
+# Run the CPU at 240 MHz (the video timing/blit assume 240 MHz)
+CONFIG_ESP32_DEFAULT_CPU_FREQ_240=y
+CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ=240
+
+# 1 ms FreeRTOS tick (driver paces frames with vTaskDelay)
+CONFIG_FREERTOS_HZ=1000
+
+# The launcher runs in the main task (app_main -> launcher()). Its ROM browser
+# (recursive quicksort over the file list + big local buffers) overflows the
+# default 3584-byte main stack -> give it room.
+CONFIG_MAIN_TASK_STACK_SIZE=16384
+
+# 4MB flash (this board); single-app + SPIFFS, NO OTA partitions.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# Custom partition table: factory app + spiffs storage (see partitions.csv)
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_OFFSET=0x8000
+
+# FATFS long filenames (default is 8.3 short names -> truncated ROM names).
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+
+# PSRAM (8MB ESPPSRAM64 @80MHz) for the NES ROM + emulator buffers. CAPS_ALLOC means
+# plain malloc() stays in internal RAM (the video ISR reads framebuffers, which MUST
+# be internal); PSRAM is used only via heap_caps_malloc(MALLOC_CAP_SPIRAM).
+CONFIG_SPIRAM_SUPPORT=y
+CONFIG_SPIRAM_BOOT_INIT=y
+CONFIG_SPIRAM_TYPE_ESPPSRAM64=y
+CONFIG_SPIRAM_SIZE=8388608
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_USE_CAPS_ALLOC=y
+CONFIG_SPIRAM_MEMTEST=y
+# ESP32 rev1 silicon (this board): keep the PSRAM cache workaround on.
+CONFIG_SPIRAM_CACHE_WORKAROUND=y
