@@ -48,3 +48,10 @@ The `atari/components/stella` core is integrated but `EXCLUDE_COMPONENTS := stel
 `atari/Makefile` keeps it out of the build. Full-speed 2600 was not reachable on the 4MB ESP32
 (the composite ISR claims the IRAM Stella's CPU needs). To be revisited on a 16MB ESP32 with more
 IRAM headroom.
+
+## License
+
+This project is licensed under the **GNU General Public License v2** ([`LICENSE`](LICENSE)) — it
+bundles GPLv2 emulator cores (smsplus, gnuboy, atari800, stella), LGPLv2 (nofrendo), and the ISC
+composite generator (ESP_8_BIT). Per-component authors and licenses are listed in
+[`CREDITS.md`](CREDITS.md). No ROMs or BIOS files are included.
