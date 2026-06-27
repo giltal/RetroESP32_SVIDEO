@@ -25,7 +25,7 @@
 /*
   Emulator Count + 2 for Theme and Favorites
 */
-#define COUNT 15
+#define COUNT 16
 
 /*
 

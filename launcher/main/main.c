@@ -70,7 +70,8 @@
     "ATARI LYNX",
     "PC ENGINE",
     "OPEN TYRIAN",
-    "ATARI 800"
+    "ATARI 800",
+    "NINTENDO GAME BOY COLOR"
   };
 
   char DIRECTORIES[COUNT][10] = {
@@ -88,7 +89,8 @@
     "lynx",       // 7
     "pce",      // 8
     "",         // 9 (tyrian - standalone)
-    "a800"      // 10
+    "a800",     // 10
+    "gbc"       // 11 (GBC -> /sd/roms/gbc/)
   };
 
   char EXTENSIONS[COUNT][10] = {
@@ -106,10 +108,11 @@
     "lnx",      // 7
     "pce",      // 8
     "",         // 9 (tyrian - standalone)
-    "xex"       // 10
+    "xex",      // 10
+    "gbc"       // 11 (GBC)
   };
 
-  int PROGRAMS[COUNT] = {1, 1, 3, 3, 3, 4, 0, 6, 7, 8, 9, 0, 8, 9, 10};  /* gb->ota_1, a26(STEP9)->ota_0 (Stella, shares with a800), a800(STEP14)->ota_0 */
+  int PROGRAMS[COUNT] = {1, 1, 3, 3, 3, 4, 0, 6, 7, 8, 9, 0, 1, 9, 10, 0};  /* gb->ota_1, a26(STEP9)->ota_0, a800(STEP14)->ota_0, gbc(STEP15)->ota_1 (PROGRAMS[STEP-3]) */
   int LIMIT = 6;
 //}#pragma endregion Emulator and Directories
 

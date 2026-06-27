@@ -59,6 +59,7 @@ SYSTEM SYSTEMS[COUNT] = {
   /* PC ENGINE */{0, &pce ,&pce_color},
   /* OPEN TYRIAN */{0, &tyrian ,&tyrian_color},
   /* ATARI 800 */{0, &a800 ,&a800_color},
+  /* NINTENDO GAME BOY COLOR */{0, &gbc ,&gbc_color},
 };
 
 // THEME

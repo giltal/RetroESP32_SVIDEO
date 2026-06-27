@@ -124,8 +124,11 @@ Coleco, ZX Spectrum, 2600, 7800, Lynx, PC Engine, Tyrian, 800). Only a subset is
 **NES (nofrendo) and SMS/GG (smsplus) run in-process** in the factory app; the rest route out by
 carousel position / ROM extension via `PROGRAMS[]` + `get_application()` →
 `odroid_system_application_set()` + reboot. Implemented routes: `.gb`→ota_1, `.xex`(800)→ota_0,
-`.a26`(2600)→ota_0. Other listed systems are placeholders (no app built for them here).
-ROM scan: `matches_rom_extension()` (note the `step == 14` special-case that adds `.atr` for 800).
+`.a26`(2600)→ota_0, `.gbc`→ota_1. Other listed systems are placeholders (no app built for them here).
+GBC ("NINTENDO GAME BOY COLOR") was re-added as the **last** carousel entry (STEP 15) — appended, not
+inserted next to GB, so no existing indices shift (avoids the `STEP==` hardcode bug class). Its games
+live in `/sd/roms/gbc/`. ROM scan: `matches_rom_extension()` (note the `step == 14` special-case that
+adds `.atr` for 800).
 
 ### atari (ota_0)
 Atari 800 via `libatari800` at 384×240 composite (`EMU_ATARI`). Features: 4-phase NTSC palette (above),
@@ -135,7 +138,12 @@ an **in-game X-menu**, save states, joystick + trigger + console keys (START/SEL
 `EXCLUDE_COMPONENTS := stella` so it's not built (the carousel `.a26` entry is intentionally kept).
 
 ### gb (ota_1)
-Game Boy / Color via gnuboy, 256-wide composite, GB-style fill scaling. X-menu + save states.
+Game Boy **and Game Boy Color** via gnuboy, 256-wide composite, GB-style fill scaling. X-menu + save
+states. gnuboy auto-detects CGB from the ROM header, so the same app serves both `.gb` and `.gbc`.
+NOTE: GBC was once dropped after a ~40-cycle hunt that blamed a "fundamental memory-bus contention"
+whole-screen shake — **that verdict was wrong; it was the DEBUG (`-Og`) build.** At RELEASE/`-O2` the
+CGB core runs smooth and full-speed (tighter code cuts core-0's SRAM traffic enough to stop starving
+the composite DMA). See the optimization section above.
 
 ## Cores & Source
 Emulator cores were copied from the upstream reference at `../RetroESP32-master/Emulators/*/components/`
