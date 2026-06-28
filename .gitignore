@@ -15,3 +15,6 @@ __pycache__/
 # Editor
 .vscode/
 .DS_Store
+
+# Stray preview/screenshot artifacts dropped in the working dir
+*-screenshot.png
