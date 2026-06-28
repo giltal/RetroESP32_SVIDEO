@@ -38,18 +38,27 @@ The ESP32 path is "I2S → built-in DAC." The S3 replacement is "GDMA → LCD_CA
 - **Clock — the make-or-break detail:** lock the sample rate to **4× the NTSC subcarrier = 14.318 MHz**
   so the colorburst phase is consistent frame-to-frame. Use the **APLL** (as the ESP32 build does) or
   the LCD_CAM fractional divider to hit it. Get this wrong → no color lock / drifting hue (B&W).
-- **R-2R ladder:** 8 GPIOs → an 8-bit weighted resistor network → one analog voltage. Start with
-  e.g. `R = 2 kΩ, 2R = 4 kΩ`; 6 bits would suffice but 8 is clean.
-- **Output stage:** two options —
-  - *Direct-drive (simplest):* low-value ladder + series resistor straight into the TV's 75 Ω; tune
-    values on a scope so full-scale ≈ 1 Vpp.
-  - *Buffered (cleaner, recommended):* ladder → single-transistor emitter follower (e.g. 2N3904) →
-    75 Ω series → RCA. Decouples ladder impedance from the 75 Ω load for consistent levels.
-- **Levels (into 75 Ω):** code 0 → sync tip 0 V · blank ≈ 0.3 V · black 7.5 IRE · code 255 → white
-  ≈ 1.0 V. **The IRE math, palettes (incl. the 4-phase Atari tables), and sync/burst/blit generation
-  port over unchanged** — only the *output backend* swaps from I2S-DAC to LCD_CAM/GDMA.
-- **Prior art:** **bitluni's ESP32Lib** drives VGA *and* composite from R-2R ladders on the original
-  ESP32. Copy his proven ladder values/level-setting; move the *streaming* side to LCD_CAM on the S3.
+- **R-2R ladder (validated values — copy directly):** 8-bit, **R = 160 Ω, 2R = 320 Ω** (build each
+  2R as two 160 Ω in series so the 2:1 ratio is exact), **1% metal-film**, 8 GPIOs → ladder.
+  - *Why 160 Ω:* to get 1 V across a 75 Ω load from a 3.3 V source the ladder output impedance must be
+    `R ≈ (3.3 − 1) × 75 = 2.3 × 75 ≈ 172.5 Ω`; drop to **160 Ω** to absorb the ~40 Ω internal GPIO
+    resistance. (This is the [obstruse/pico-composite8](https://github.com/obstruse/pico-composite8)
+    ladder — an 8-bit R-2R composite DAC at the same 3.3 V / 75 Ω operating point.)
+- **Output stage:** **direct-drive into 75 Ω, no buffer needed.** Ladder out → RCA centre, GND → shield.
+  Proven clean **0–1 V** swing; current is tiny (**~6.5 mA worst-case per pin, ~19 mA total**), well
+  within S3 pad limits — so the earlier "might need a transistor buffer" caution does **not** apply at
+  these values. (Keep a 2N3904 emitter-follower only as a fallback if a particular TV wants stiffer drive.)
+- **Levels / code mapping:** sync tip → 0 V, white → ~1 V into 75 Ω. Map the video onto the **full 0–255
+  code range** (obstruse uses **sync = 0, black ≈ 86, white = 255**) — this means **recomputing the
+  `IRE()` constant**, which is currently calibrated for the ESP32 *internal DAC* (it only uses codes
+  ~0–73). The 4-phase Atari palettes, `composite_encode_rgb`, and sync/burst/blit logic otherwise port
+  over unchanged — only the output backend and that one scaling constant change.
+- **Prior art:**
+  - [**obstruse/pico-composite8**](https://github.com/obstruse/pico-composite8) — *the* reference: an
+    8-bit R-2R composite DAC (3.3 V → 75 Ω, direct-drive) on an RP2040. Copy the ladder verbatim; the
+    Pico's PIO streaming is the analog of the S3's LCD_CAM + GDMA.
+  - **bitluni's ESP32Lib** — R-2R *technique* reference, but note his ladders are for **VGA** (0.7 Vpp
+    RGB) and his ESP32 **composite was the built-in DAC**, so there's no composite ladder to copy from him.
 
 ## 2. USB gamepads — native, no CH559
 
@@ -86,7 +95,7 @@ overlay?" discussion **becomes moot** — just place the hot code and move on. M
 
 | | ESP32 (current) | ESP32-S3 (this design) |
 |---|---|---|
-| Composite video | built-in DAC (free) | R-2R ladder (~10 R + 1 transistor) |
+| Composite video | built-in DAC (free) | 8-bit R-2R ladder (~16–24 × 160 Ω, no buffer) |
 | USB gamepad | external CH559 chip | **native USB host** |
 | RAM / IRAM | ~520 KB / ~128 KB | **512 KB SRAM, ~4× IRAM** |
 | Multi-emulator per slot | a fight | easy |
@@ -98,6 +107,8 @@ end of the IRAM ceiling.
 ## Open questions / risks to validate first
 
 - Exact LCD_CAM clock setup for a clean 14.318 MHz (APLL vs fractional divider) on the S3.
-- R-2R values + whether direct-drive is good enough or the transistor buffer is needed (scope it).
+- ~~R-2R values / buffer~~ **Resolved** — copy obstruse/pico-composite8: 8-bit, R = 160 Ω / 2R = 320 Ω,
+  direct-drive, no buffer. Only the **`IRE()` code-mapping constant** still needs recomputing for the
+  external 8-bit ladder (target sync = 0, white = 255), verified on a scope.
 - USB Host HID driver coverage for the specific gamepads you use (and VBUS power design).
 - Re-porting the composite ISR timing to LCD_CAM/GDMA without introducing jitter.
