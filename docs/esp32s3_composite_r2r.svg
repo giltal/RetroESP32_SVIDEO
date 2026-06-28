@@ -1,0 +1,75 @@
+<svg viewBox="0 0 820 500" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, Segoe UI, sans-serif">
+  <rect x="0" y="0" width="820" height="500" fill="#ffffff"/>
+  <text x="410" y="28" text-anchor="middle" font-size="17" font-weight="700" fill="#111111">ESP32-S3 → composite video via an external R-2R DAC</text>
+
+  <!-- ESP32-S3 block -->
+  <rect x="22" y="60" width="214" height="156" rx="10" fill="#f4f4f5" stroke="#b5b5b8"/>
+  <text x="129" y="86" text-anchor="middle" font-size="15" font-weight="700" fill="#111111">ESP32-S3</text>
+  <text x="38" y="112" font-size="11.5" fill="#555555">emulator core · core 0</text>
+  <text x="38" y="132" font-size="11.5" fill="#555555">composite gen → DMA buf · core 1</text>
+  <line x1="38" y1="146" x2="220" y2="146" stroke="#dddddd"/>
+  <text x="38" y="170" font-size="11.5" font-weight="600" fill="#111111">LCD_CAM 8-bit parallel + GDMA</text>
+  <text x="38" y="194" font-size="11.5" font-weight="600" fill="#3257d6">clk ≈ 14.318 MHz  (4×f_sc)</text>
+
+  <!-- bus to ladder -->
+  <path d="M236 138 H300" stroke="#111111" stroke-width="2" fill="none"/>
+  <path d="M292 133 l8 5 -8 5" fill="#111111"/>
+  <text x="268" y="128" text-anchor="middle" font-size="11" font-family="monospace" fill="#555555">D0–D7</text>
+  <text x="268" y="158" text-anchor="middle" font-size="10" fill="#888888">8 GPIO</text>
+
+  <!-- data bus rail -->
+  <path d="M300 138 H560" stroke="#111111" stroke-width="1.5" fill="none"/>
+  <!-- summing rail -->
+  <path d="M312 300 H548" stroke="#111111" stroke-width="1.5" fill="none"/>
+
+  <g font-size="10" font-family="monospace" fill="#555555">
+    <text x="312" y="130">D0</text><text x="390" y="130">D1</text><text x="468" y="130">D2</text><text x="540" y="130">D3·· D7</text>
+  </g>
+  <g stroke="#111111" stroke-width="1.5" fill="none">
+    <path d="M312 138 V214"/><path d="M390 138 V214"/><path d="M468 138 V214"/><path d="M540 138 V214"/>
+    <path d="M312 246 V300"/><path d="M390 246 V300"/><path d="M468 246 V300"/><path d="M540 246 V300"/>
+  </g>
+  <!-- 2R resistors (vertical) -->
+  <g fill="#e6e6e8" stroke="#b5b5b8">
+    <rect x="304" y="214" width="16" height="32" rx="3"/><rect x="382" y="214" width="16" height="32" rx="3"/>
+    <rect x="460" y="214" width="16" height="32" rx="3"/><rect x="532" y="214" width="16" height="32" rx="3"/>
+  </g>
+  <g font-size="9.5" fill="#555555" text-anchor="middle">
+    <text x="312" y="234">2R</text><text x="390" y="234">2R</text><text x="468" y="234">2R</text><text x="540" y="234">2R</text>
+  </g>
+  <!-- R resistors (horizontal) -->
+  <g fill="#e6e6e8" stroke="#b5b5b8">
+    <rect x="335" y="292" width="32" height="16" rx="3"/><rect x="413" y="292" width="32" height="16" rx="3"/><rect x="491" y="292" width="32" height="16" rx="3"/>
+  </g>
+  <g font-size="9.5" fill="#555555" text-anchor="middle">
+    <text x="351" y="304">R</text><text x="429" y="304">R</text><text x="507" y="304">R</text>
+  </g>
+  <!-- termination 2R to GND -->
+  <path d="M312 300 V340" stroke="#111111" stroke-width="1.5" fill="none"/>
+  <rect x="304" y="340" width="16" height="30" rx="3" fill="#e6e6e8" stroke="#b5b5b8"/>
+  <text x="312" y="359" font-size="9.5" fill="#555555" text-anchor="middle">2R</text>
+  <path d="M312 370 V384 M302 384 H322 M305 389 H319 M308 393 H316" stroke="#888888" stroke-width="1.4" fill="none"/>
+  <text x="430" y="404" text-anchor="middle" font-size="11" fill="#888888">8-bit R-2R ladder  (e.g. R = 2 kΩ, 2R = 4 kΩ)</text>
+
+  <!-- Vout node -->
+  <circle cx="548" cy="300" r="4" fill="#3257d6"/>
+  <text x="556" y="290" font-size="11" font-weight="600" fill="#3257d6">Vout</text>
+
+  <!-- output stage -->
+  <path d="M552 300 H600" stroke="#111111" stroke-width="2" fill="none"/>
+  <rect x="600" y="270" width="120" height="60" rx="9" fill="#f4f4f5" stroke="#b5b5b8"/>
+  <text x="660" y="294" text-anchor="middle" font-size="11" font-weight="600" fill="#111111">75 Ω series</text>
+  <text x="660" y="312" text-anchor="middle" font-size="11" fill="#555555">+ AC-couple cap</text>
+
+  <!-- RCA jack -->
+  <path d="M720 300 H756" stroke="#111111" stroke-width="2" fill="none"/>
+  <circle cx="770" cy="300" r="13" fill="none" stroke="#111111" stroke-width="2"/>
+  <circle cx="770" cy="300" r="4" fill="#111111"/>
+  <text x="770" y="338" text-anchor="middle" font-size="10.5" fill="#555555">RCA → TV</text>
+  <text x="770" y="352" text-anchor="middle" font-size="9.5" fill="#888888">(75 Ω)</text>
+
+  <!-- levels note -->
+  <rect x="22" y="430" width="776" height="52" rx="9" fill="#f4f4f5" stroke="#dddddd"/>
+  <text x="38" y="452" font-size="11.5" font-weight="600" fill="#111111">Levels (into 75 Ω):</text>
+  <text x="38" y="470" font-size="11" font-family="monospace" fill="#555555">code 0 → sync tip 0 V   ·   blank ≈ 0.3 V   ·   black 7.5 IRE   ·   code 255 → white ≈ 1.0 V   —   same IRE math/palette as today.</text>
+</svg>

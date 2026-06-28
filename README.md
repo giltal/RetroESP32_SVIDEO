@@ -59,6 +59,12 @@ The `atari/components/stella` core is integrated but `EXCLUDE_COMPONENTS := stel
 IRAM headroom — though, like the GBC shake above, that "too slow" verdict was measured under DEBUG,
 so it's worth a RELEASE re-test first.
 
+## Future direction (ESP32-S3 "v2")
+
+A design note for a more capable revision — composite via an external **R-2R DAC**, **native-USB**
+gamepads (dropping the CH559), and ~4× the IRAM headroom for easy multi-emulator — is in
+[`docs/FUTURE_ESP32-S3.md`](docs/FUTURE_ESP32-S3.md).
+
 ## License
 
 This project is licensed under the **GNU General Public License v2** ([`LICENSE`](LICENSE)) — it
