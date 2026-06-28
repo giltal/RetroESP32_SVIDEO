@@ -5,11 +5,14 @@ OTA firmware for an ESP32 (4MB flash, 8MB PSRAM) retro handheld that outputs **c
 (legacy GNU Make) apps, one per flash partition. The launcher (factory app) hands off to an OTA
 slot via `odroid_system_application_set()` + reboot, chosen by the ROM's extension.
 
+**Supported systems:** NES, Game Boy, Game Boy Color, Sega Master System, Sega Game Gear, Atari 800.
+(Atari 2600 is integrated but currently disabled — see below.)
+
 | App        | Folder      | Partition          | Systems / cores                                   |
 |------------|-------------|--------------------|---------------------------------------------------|
 | Launcher   | `launcher/` | factory @ 0x10000  | Carousel UI + NES (nofrendo) + SMS/GG (smsplus)   |
 | Atari      | `atari/`    | ota_0 @ 0x1C0000   | Atari 800 (`atari800`). 2600/Stella code is present but **excluded** from the build (see below) |
-| Game Boy   | `gb/`       | ota_1 @ 0x2E0000   | GB / GBC (gnuboy)                                 |
+| Game Boy   | `gb/`       | ota_1 @ 0x2E0000   | Game Boy **and Game Boy Color** (gnuboy)          |
 
 Each app is fully self-contained — its own `components/` (incl. a per-app `odroid` HAL with
 `video_out.h`), `Makefile`, `sdkconfig`, and `partitions.csv`. There are intentionally **no shared
@@ -42,12 +45,19 @@ timing-critical paths via `component.mk`: `main` (composite ISR + blit) and `odr
 6502 cores (`atari800`, `gnuboy`) also carry their own `-O2`. **Do NOT ship DEBUG (`-Og`)** — it
 leaves the composite video/audio path unoptimized and the result is visibly choppy.
 
+> **Lesson learned the hard way:** Game Boy Color was once *dropped* after a ~40-cycle investigation
+> concluded its whole-screen shake was unfixable hardware memory-bus contention. It wasn't — it was
+> the DEBUG build. At RELEASE/`-O2` the tighter code cuts core-0's SRAM traffic enough to stop
+> starving the composite DMA, and CGB runs smooth and full-speed. Always confirm RELEASE before
+> blaming the hardware.
+
 ## Atari 2600 (Stella) — deferred
 
 The `atari/components/stella` core is integrated but `EXCLUDE_COMPONENTS := stella` in
 `atari/Makefile` keeps it out of the build. Full-speed 2600 was not reachable on the 4MB ESP32
 (the composite ISR claims the IRAM Stella's CPU needs). To be revisited on a 16MB ESP32 with more
-IRAM headroom.
+IRAM headroom — though, like the GBC shake above, that "too slow" verdict was measured under DEBUG,
+so it's worth a RELEASE re-test first.
 
 ## License
 
